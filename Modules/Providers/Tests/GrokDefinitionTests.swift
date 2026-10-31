@@ -191,7 +191,7 @@ struct GrokDefinitionTests {
     }
 
     @Test
-    func `should show no quota, not a made-up 100%, when billing names a period but no usage`() async throws {
+    func `shows full remaining when billing has a period but no usage percentages`() async throws {
         let json = """
         {
           "config": {
@@ -210,8 +210,10 @@ struct GrokDefinitionTests {
 
         let snapshot = try await parse(Data(json.utf8), providerId: "grok")
 
-        // No usage reported is no quota — never a made-up 100% (the Left law).
-        #expect(snapshot.quotas.isEmpty)
+        let weekly = try #require(snapshot.quota(for: .weekly))
+        #expect(weekly.percentRemaining == 100)
+        let expectedEnd = try #require(OAuth2Refresher.parseDate("2026-09-10T10:51:20.845630+00:00"))
+        #expect(weekly.resetsAt == expectedEnd)
     }
 
     @Test

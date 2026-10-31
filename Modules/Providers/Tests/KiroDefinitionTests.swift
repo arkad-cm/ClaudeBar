@@ -38,7 +38,7 @@ struct KiroDefinitionTests {
             }
             return cli
         }
-        platform.keychain = StubKeychain { _, _ in nil }
+        platform.keychain = { _ in (1, "") }
         platform.browserCookies = nil
         platform.browserStorage = nil
         return Provider(definition: definition, settings: InMemoryProviderSettings(), makeDataSource: { [platform] source, _ in
@@ -196,6 +196,21 @@ struct KiroDefinitionTests {
         let account = product.defaultAccount
         #expect(!(await product.isAvailable(account)))
         await #expect(throws: UsageError.cliNotFound("kiro-cli")) { try await product.refresh(account) }
+    }
+
+    @Test func `should read the reset day Kiro writes out in full`() async throws {
+        let calendar = Zones.losAngelesCalendar
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 31, hour: 13)))
+        let snapshot = try await make("""
+        Estimated Usage | resets on 2026-11-01 | KIRO POWER
+        Credits (10000.00 of 10000 covered in plan), 100.0%
+        """, now: now).refreshPlain()
+        let reset = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 1)))
+        let monthBefore = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 1)))
+        let monthly = snapshot.quota(for: .timeLimit("Monthly"))
+        #expect(monthly?.resetsAt == reset)
+        #expect(monthly?.resetText == "Resets on 11/01")
+        #expect(monthly?.windowDuration == reset.timeIntervalSince(monthBefore))
     }
 
     @Test func `should expire bonus credits in 29 days and reset the monthly credits next year when today is the reset day`() async throws {

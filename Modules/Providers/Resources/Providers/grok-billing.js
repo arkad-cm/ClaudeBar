@@ -46,7 +46,11 @@ function read(response, context) {
     // USD cents; an empty object is zero. An empty wallet is left out, never shown depleted.
     const prepaid=object(config.prepaidBalance)?Number(config.prepaidBalance.val):NaN;
     if(Number.isFinite(prepaid) && prepaid>0)quotas.push({type:'model',name:'Prepaid',left:{money:String(prepaid/100),currency:'USD'}});
-    // No usage reported is no quota — never a made-up 100% (the Left law).
+    // When billing names a valid period but reports no usage percentages (fresh period, unmetered),
+    // show 100% remaining for the current window so the card is not left empty.
+    if(quotas.length===0 && (start!=null || end!=null)) {
+        add(weekly?'weekly':'time',weekly?null:(label==null?'Usage':label),100);
+    }
     const result={quotas,account:{email:context.credential.email||null}};
     const settings=object(answers.settings)?answers.settings:{};
     const plan=planName(settings.subscription_tier_display)||planName(config.subscriptionTier)||planName(root.subscriptionTier);
