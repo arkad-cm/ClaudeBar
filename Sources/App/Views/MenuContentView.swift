@@ -1248,6 +1248,11 @@ struct MenuContentView: View {
         if settings.isShown(.lastThirtyDays) && history?.lastThirtyDays != nil { return false }
         if settings.isShown(.lastYear) && history?.lastYear != nil { return false }
         if settings.isShown(.modelMix) && history?.lastYear?.hasModels == true { return false }
+        if settings.isShown(.projectMix),
+           let year = history?.lastYear,
+           !ByProject(of: year, in: year.defaultUnit).isEmpty {
+            return false
+        }
         return true
     }
 
