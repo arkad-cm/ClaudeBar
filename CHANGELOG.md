@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Usage history no longer re-reads today's logs after a relaunch**: what a scan read is kept in `~/.claudebar/usage-history/scans/`, so a new process reads only what was added since. On Windows the hourly upload's read went from 117 s to 3 s. ([#659](https://github.com/tddworks/ClaudeBar/pull/659)) → [docs](https://github.com/tddworks/ClaudeBar/blob/main/docs/features/usage-history/daily-usage/README.md)
 
 ### Fixed
-- **Grok shows full remaining for periods without usage, and Kiro parses ISO reset dates**: an unmetered or fresh Grok period displays 100% remaining with its countdown, Kiro parses YYYY-MM-DD allowance dates, and an empty provider snapshot displays a graceful fallback message. ([#667](https://github.com/tddworks/ClaudeBar/issues/667)) → [docs](https://github.com/tddworks/ClaudeBar/blob/main/docs/providers/grok/README.md)
+- **Grok shows full remaining for periods without usage, and Kiro parses ISO dates**: an unmetered Grok period displays 100% remaining with countdown, Kiro parses YYYY-MM-DD dates, and empty snapshots show a fallback message. ([#667](https://github.com/tddworks/ClaudeBar/issues/667)) → [docs](https://github.com/tddworks/ClaudeBar/blob/main/docs/providers/grok/README.md)
 
 ---
 

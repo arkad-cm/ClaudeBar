@@ -14,7 +14,9 @@ import FoundationNetworking
 struct GrokDefinitionTests {
 
     private func parse(_ data: Data, providerId: String = "grok", accountEmail: String? = nil,
-                       settings: String = "{}", settingsStatus: Int = 200) async throws -> UsageSnapshot {
+                       settings: String = "{}", settingsStatus: Int = 200,
+                       now: (@Sendable () -> Date)? = nil) async throws -> UsageSnapshot {
+        let clock = now ?? { Date() }
         let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at:root) }
         let folder=root.appendingPathComponent(".grok")
@@ -32,7 +34,7 @@ struct GrokDefinitionTests {
             return (data,HTTPURLResponse(url:request.url!,statusCode:200,httpVersion:nil,headerFields:nil)!)
         }
         let provider=Provider(definition:try ProviderFactory.builtIn("grok"),settings:InMemoryProviderSettings(),makeDataSource:{source,_ in
-            DataSources.make(source,providerId:"grok",cliExecutor:MockCLIExecutor(),network:network,makeTransport:{_,_,_,_ in MockRPCTransport()},scripts:ProviderFactory.builtInScripts,environment:{_ in nil},homeDirectory:root,now:{Date()})
+            DataSources.make(source,providerId:"grok",cliExecutor:MockCLIExecutor(),network:network,makeTransport:{_,_,_,_ in MockRPCTransport()},scripts:ProviderFactory.builtInScripts,environment:{_ in nil},homeDirectory:root,now:clock)
         })
         return try await provider.refreshPlain()
     }
@@ -208,7 +210,11 @@ struct GrokDefinitionTests {
         }
         """
 
-        let snapshot = try await parse(Data(json.utf8), providerId: "grok")
+        let snapshot = try await parse(
+            Data(json.utf8),
+            providerId: "grok",
+            now: { OAuth2Refresher.parseDate("2026-09-05T12:00:00+00:00")! }
+        )
 
         let weekly = try #require(snapshot.quota(for: .weekly))
         #expect(weekly.percentRemaining == 100)

@@ -23,13 +23,17 @@ function read(response, context) {
             const year = full ? Number(reset[1]) : now.getFullYear();
             const month = Number(reset[full ? 2 : 1]) - 1;
             const day = Number(reset[full ? 3 : 2]);
-            date = new Date(year, month, day);
-            if (!full && date < now) date = new Date(year + 1, month, day);
-            // The month that ends on the reset date — its real length.
-            const start = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
-            windowSeconds = (date.getTime() - start.getTime()) / 1000;
-            const pad = n => (n < 10 ? "0" : "") + n;
-            resetText = "Resets on " + pad(month + 1) + "/" + pad(day);
+            let candidate = new Date(year, month, day);
+            if (!full && candidate < now) candidate = new Date(year + 1, month, day);
+            const targetYear = full ? year : candidate.getFullYear();
+            if (candidate.getFullYear() === targetYear && candidate.getMonth() === month && candidate.getDate() === day) {
+                date = candidate;
+                // The month that ends on the reset date — its real length.
+                const start = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
+                windowSeconds = (date.getTime() - start.getTime()) / 1000;
+                const pad = n => (n < 10 ? "0" : "") + n;
+                resetText = "Resets on " + pad(month + 1) + "/" + pad(day);
+            }
         }
         quotas.push({type: "time", name: "Monthly",
             percentRemaining: Math.max(0, (Number(credits[2]) - Number(credits[1])) / Number(credits[2]) * 100),
