@@ -97,6 +97,15 @@ struct KiroDefinitionTests {
     }
 
     @Test
+    func `should keep the plain bonus name when the other grants have no credits`() async throws {
+        let usage = #"{"jsonrpc":"2.0","id":2,"result":{"success":true,"data":{"usageBreakdowns":[],"bonusCredits":[{"name":"Welcome","used":125,"total":500},{"name":"Spent","used":0,"total":0}]}}}"#
+        let snapshot = try await make("", rpc: [Self.initialized, usage]).refreshPlain()
+
+        #expect(snapshot.quotas.count == 1)
+        #expect(snapshot.quota(for: .timeLimit("Bonus credits"))?.percentRemaining == 75)
+    }
+
+    @Test
     func `should read the usage screen when kiro-cli has no v3 engine to ask`() async throws {
         let provider = try make("Estimated Usage | resets on 2026-12-01 | KIRO PRO MAX\nCredits (250 of 5000 covered in plan), 5.0%")
 

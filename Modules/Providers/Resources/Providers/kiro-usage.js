@@ -13,16 +13,17 @@ function read(response, context) {
 // card and can be hidden alone.
 function fromAccount(data, context, now) {
     const quotas = [];
-    const grants = Array.isArray(data.bonusCredits) ? data.bonusCredits : [];
-    const names = grants.map(b => String(b.name || "").trim());
-    grants.forEach((b, i) => {
-        const bonus = bonusQuota(b.used, b.total, typeof b.daysUntilExpiry === "number" ? b.daysUntilExpiry : null, context);
-        if (!bonus) return;
+    const grants = (Array.isArray(data.bonusCredits) ? data.bonusCredits : [])
+        .map(b => ({name: String(b.name || "").trim(),
+            quota: bonusQuota(b.used, b.total, typeof b.daysUntilExpiry === "number" ? b.daysUntilExpiry : null, context)}))
+        .filter(g => g.quota);
+    const names = grants.map(g => g.name);
+    grants.forEach((g, i) => {
         if (grants.length > 1) {
-            const unique = names[i] && names.indexOf(names[i]) === names.lastIndexOf(names[i]);
-            bonus.name = unique ? "Bonus credits: " + names[i] : "Bonus credits " + (i + 1);
+            const unique = g.name && names.indexOf(g.name) === names.lastIndexOf(g.name);
+            g.quota.name = unique ? "Bonus credits: " + g.name : "Bonus credits " + (i + 1);
         }
-        quotas.push(bonus);
+        quotas.push(g.quota);
     });
     const reset = /^(\d{4})-(\d{2})-(\d{2})/.exec(data.billingCycleReset || "");
     for (const b of Array.isArray(data.usageBreakdowns) ? data.usageBreakdowns : []) {
